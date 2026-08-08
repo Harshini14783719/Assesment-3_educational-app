@@ -1,16 +1,11 @@
 # CP3406 Assessment 3: Education App - BrainSpark STEM
 
-![Android](https://img.shields.io/badge/Platform-Android-green.svg)
-![Kotlin](https://img.shields.io/badge/Language-Kotlin-blue.svg)
-![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose%20M3-purple.svg)
-![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%2B%20Repository-orange.svg)
-
-## 📌 Project Overview
+## Project Overview
 **BrainSpark STEM** is an interactive, ethically designed mobile educational application developed for secondary and tertiary STEM (Science, Technology, Engineering, & Mathematics) learners. Designed as part of the **CP3406 Mobile Computing** course at **James Cook University Australia**, BrainSpark combines real-time trivia API content with persistent offline Room database caching, active recall flashcards, and interactive STEM quizzes to support cognitive memory retention and analytical problem solving.
 
 ---
 
-## 🚀 Core Screens & Features
+## Core Screens & Features
 
 | Screen | Description & Technical Implementation |
 | :--- | :--- |
@@ -21,7 +16,7 @@
 
 ---
 
-## 🛠️ Architecture & Technical Stack
+## Architecture & Technical Stack
 
 The app follows **Android Clean Architecture Principles** using **MVVM (Model-View-ViewModel)**, **Repository Pattern**, and **Jetpack Compose Material Design 3**.
 
@@ -47,18 +42,7 @@ com.jcu.educationapp/
 - **Navigation**: Type-safe `androidx.navigation.compose` navigation controller with bottom navigation bar.
 - **Testing**: Non-GUI JUnit 4 unit tests verifying repository fallback, scoring algorithms, and ViewModel state transitions.
 
----
 
-## 🧪 Running Unit Tests
-
-To run the unit test suite via command line:
-
-```bash
-# Windows
-.\gradlew test
-
-# macOS / Linux
-./gradlew test
 ```
 
 Test results and reports will be generated in `app/build/reports/tests/testDebugUnitTest/index.html`.
