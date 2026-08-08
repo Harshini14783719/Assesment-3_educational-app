@@ -1,0 +1,543 @@
+package com.jcu.educationapp.ui.screens
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.jcu.educationapp.ui.theme.EmeraldSuccess
+import com.jcu.educationapp.ui.theme.IndigoPrimary
+import com.jcu.educationapp.ui.theme.RubyError
+import com.jcu.educationapp.viewmodel.QuizUiState
+import com.jcu.educationapp.viewmodel.QuizViewModel
+
+@Composable
+fun ActivityScreen(
+    viewModel: QuizViewModel,
+    initialCategory: String = "Science"
+) {
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Quiz, 1 = Flashcards
+
+    LaunchedEffect(initialCategory) {
+        viewModel.loadQuiz(category = initialCategory)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        // Tab Header
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = IndigoPrimary
+        ) {
+            Tab(
+                selected = selectedTab == 0,
+                onClick = { selectedTab = 0 },
+                text = { Text("STEM Quiz Mode", fontWeight = FontWeight.Bold) }
+            )
+            Tab(
+                selected = selectedTab == 1,
+                onClick = { selectedTab = 1 },
+                text = { Text("Active Recall Flashcards", fontWeight = FontWeight.Bold) }
+            )
+        }
+
+        if (selectedTab == 0) {
+            QuizTabContent(viewModel = viewModel)
+        } else {
+            FlashcardTabContent()
+        }
+    }
+}
+
+@Composable
+private fun QuizTabContent(viewModel: QuizViewModel) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        when (val state = uiState) {
+            is QuizUiState.Loading -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = IndigoPrimary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Fetching STEM content...", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+
+            is QuizUiState.Error -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = state.message,
+                        color = RubyError,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.loadQuiz("Science") },
+                        colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+                    ) {
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Retry")
+                    }
+                }
+            }
+
+            is QuizUiState.Active -> {
+                ActiveQuizView(
+                    state = state,
+                    onOptionSelected = { viewModel.selectOption(it) },
+                    onSubmitAnswer = { viewModel.submitAnswer() },
+                    onNextQuestion = { viewModel.nextQuestion() }
+                )
+            }
+
+            is QuizUiState.Completed -> {
+                CompletedQuizView(
+                    state = state,
+                    onRestartClicked = { viewModel.loadQuiz(state.category) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActiveQuizView(
+    state: QuizUiState.Active,
+    onOptionSelected: (String) -> Unit,
+    onSubmitAnswer: () -> Unit,
+    onNextQuestion: () -> Unit
+) {
+    val currentQuestion = state.questions[state.currentIndex]
+    val progress = (state.currentIndex + 1).toFloat() / state.questions.size
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Progress bar & Timer header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Question ${state.currentIndex + 1} of ${state.questions.size}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Timer,
+                    contentDescription = null,
+                    tint = if (state.timerSecondsRemaining < 5) RubyError else IndigoPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "${state.timerSecondsRemaining}s",
+                    fontWeight = FontWeight.Bold,
+                    color = if (state.timerSecondsRemaining < 5) RubyError else IndigoPrimary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = IndigoPrimary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Question Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(20.dp)) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(IndigoPrimary.copy(alpha = 0.1f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "${state.category} • ${state.difficulty}",
+                        color = IndigoPrimary,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = currentQuestion.question,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Multiple Choice Options
+        currentQuestion.options.forEach { option ->
+            val isSelected = state.selectedOption == option
+            val isCorrect = state.isAnswerSubmitted && option == currentQuestion.correctAnswer
+            val isWrongSelection = state.isAnswerSubmitted && isSelected && option != currentQuestion.correctAnswer
+
+            val backgroundColor = when {
+                isCorrect -> EmeraldSuccess.copy(alpha = 0.2f)
+                isWrongSelection -> RubyError.copy(alpha = 0.2f)
+                isSelected -> IndigoPrimary.copy(alpha = 0.15f)
+                else -> MaterialTheme.colorScheme.surface
+            }
+
+            val borderColor = when {
+                isCorrect -> EmeraldSuccess
+                isWrongSelection -> RubyError
+                isSelected -> IndigoPrimary
+                else -> Color.Transparent
+            }
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+                    .border(2.dp, borderColor, RoundedCornerShape(14.dp))
+                    .clickable(enabled = !state.isAnswerSubmitted) {
+                        onOptionSelected(option)
+                    },
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = backgroundColor)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = option,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    if (isCorrect) {
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = EmeraldSuccess)
+                    } else if (isWrongSelection) {
+                        Icon(imageVector = Icons.Default.Cancel, contentDescription = null, tint = RubyError)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Answer Explanation box when submitted
+        AnimatedVisibility(
+            visible = state.isAnswerSubmitted,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(modifier = Modifier.padding(16.dp)) {
+                    Icon(imageVector = Icons.Default.Info, contentDescription = null, tint = IndigoPrimary)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text("Explanation", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(currentQuestion.explanation, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Action Button (Submit or Next)
+        if (!state.isAnswerSubmitted) {
+            Button(
+                onClick = onSubmitAnswer,
+                enabled = state.selectedOption != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+            ) {
+                Text("Submit Answer", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        } else {
+            Button(
+                onClick = onNextQuestion,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+            ) {
+                Text(
+                    text = if (state.currentIndex + 1 < state.questions.size) "Next Question" else "View Results",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompletedQuizView(
+    state: QuizUiState.Completed,
+    onRestartClicked: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(EmeraldSuccess.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.EmojiEvents,
+                    contentDescription = null,
+                    tint = EmeraldSuccess,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Quiz Completed!",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Category: ${state.category}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "${state.finalScore} / ${state.totalQuestions}",
+                fontSize = 42.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = IndigoPrimary
+            )
+
+            Text(
+                text = "${state.percentage.toInt()}% Accuracy",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = EmeraldSuccess
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Total Time: ${state.timeTakenSeconds} seconds",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onRestartClicked,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+            ) {
+                Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Take Another Quiz", fontSize = 16.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun FlashcardTabContent() {
+    var cardFlipped by remember { mutableStateOf(false) }
+    var currentCardIndex by remember { mutableIntStateOf(0) }
+
+    val flashcards = remember {
+        listOf(
+            "Photosynthesis" to "The biological process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water.",
+            "Algorithm" to "A self-contained step-by-step set of operations to solve a problem or perform a computation.",
+            "DNA (Deoxyribonucleic Acid)" to "The molecule carrying genetic instructions for the development, functioning, and reproduction of living organisms.",
+            "Newton's First Law" to "An object will remain at rest or in uniform motion in a straight line unless acted upon by an external force.",
+            "Encapsulation" to "In OOP, bundling data with the methods operating on that data, restricting direct access to object components."
+        )
+    }
+
+    val currentPair = flashcards[currentCardIndex]
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Card ${currentCardIndex + 1} of ${flashcards.size}",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(260.dp)
+                .clickable { cardFlipped = !cardFlipped },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (cardFlipped) IndigoPrimary else MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (cardFlipped) currentPair.second else currentPair.first,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (cardFlipped) Color.White else MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Tap card to flip between Term and Definition",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = {
+                    if (currentCardIndex > 0) {
+                        currentCardIndex--
+                        cardFlipped = false
+                    }
+                },
+                enabled = currentCardIndex > 0
+            ) {
+                Text("Previous")
+            }
+
+            Button(
+                onClick = {
+                    if (currentCardIndex + 1 < flashcards.size) {
+                        currentCardIndex++
+                        cardFlipped = false
+                    }
+                },
+                enabled = currentCardIndex + 1 < flashcards.size
+            ) {
+                Text("Next")
+            }
+        }
+    }
+}
