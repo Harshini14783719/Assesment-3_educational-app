@@ -7,12 +7,12 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 
-class SoundManager(private val context: Context) {
+class SoundManager(context: Context) {
 
     private val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
     private var toneGenerator: ToneGenerator? = try {
         ToneGenerator(AudioManager.STREAM_MUSIC, 80)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 
@@ -26,7 +26,7 @@ class SoundManager(private val context: Context) {
     fun playIncorrectSound(enabled: Boolean) {
         if (!enabled) return
         try {
-            toneGenerator?.startTone(ToneGenerator.TONE_CDMA_ABORT, 200)
+            toneGenerator?.startTone(ToneGenerator.TONE_PROP_NACK, 200)
         } catch (_: Exception) {}
     }
 
