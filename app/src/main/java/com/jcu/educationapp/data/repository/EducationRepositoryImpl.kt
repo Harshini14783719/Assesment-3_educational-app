@@ -3,7 +3,6 @@ package com.jcu.educationapp.data.repository
 import android.os.Build
 import android.text.Html
 import com.jcu.educationapp.data.local.OfflineQuestionDao
-import com.jcu.educationapp.data.local.OfflineQuestionEntity
 import com.jcu.educationapp.data.local.QuizResultDao
 import com.jcu.educationapp.data.local.QuizResultEntity
 import com.jcu.educationapp.data.remote.TriviaApiService
@@ -54,6 +53,48 @@ class EducationRepositoryImpl(
         }
     }
 
+    override suspend fun getDailyQuote(): Pair<String, String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getRandomQuote()
+                if (response.isSuccessful && response.body() != null) {
+                    val body = response.body()!!
+                    Pair(body.quote, body.author)
+                } else {
+                    getFallbackQuote()
+                }
+            } catch (_: Exception) {
+                getFallbackQuote()
+            }
+        }
+    }
+
+    override suspend fun getDailyFact(): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.getRandomFact()
+                if (response.isSuccessful && response.body() != null && !response.body()!!.text.isNullOrBlank()) {
+                    response.body()!!.text!!
+                } else {
+                    "Did you know? Mitochondria generate 90% of the chemical energy that human cells need to survive!"
+                }
+            } catch (_: Exception) {
+                "Did you know? Mitochondria generate 90% of the chemical energy that human cells need to survive!"
+            }
+        }
+    }
+
+    private fun getFallbackQuote(): Pair<String, String> {
+        val quotes = listOf(
+            "The important thing is not to stop questioning. Curiosity has its own reason for existing." to "Albert Einstein",
+            "Nothing in life is to be feared, it is only to be understood. Now is the time to understand more, so that we may fear less." to "Marie Curie",
+            "Somewhere, something incredible is waiting to be known." to "Carl Sagan",
+            "The first principle is that you must not fool yourself and you are the easiest person to fool." to "Richard Feynman",
+            "That brain of mine is something more than merely mortal; as time will show." to "Ada Lovelace"
+        )
+        return quotes.random()
+    }
+
     private suspend fun fetchOfflineQuestions(category: String, amount: Int): Result<List<QuestionModel>> {
         val offlineEntities = offlineQuestionDao.getRandomQuestions(category, amount)
         if (offlineEntities.isNotEmpty()) {
@@ -72,7 +113,6 @@ class EducationRepositoryImpl(
             }
             return Result.success(models)
         } else {
-            // Guarantee fallback items even if db callback hasn't finished
             val hardcodedDefaults = getHardcodedFallbackQuestions(category)
             return Result.success(hardcodedDefaults.take(amount))
         }

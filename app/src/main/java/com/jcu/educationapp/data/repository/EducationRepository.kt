@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface EducationRepository {
     suspend fun getQuestions(category: String, amount: Int): Result<List<QuestionModel>>
+    suspend fun getDailyQuote(): Pair<String, String>
+    suspend fun getDailyFact(): String
     suspend fun saveQuizResult(result: QuizResultEntity): Long
     fun getAllQuizResults(): Flow<List<QuizResultEntity>>
     fun getTotalQuizzesTaken(): Flow<Int>
