@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,12 +56,13 @@ fun NavGraph(
                             selectedTextColor = IndigoPrimary
                         ),
                         onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (currentRoute != screen.route) {
+                                navController.navigate(screen.route) {
+                                    popUpTo(Screen.Landing.route) {
+                                        inclusive = false
+                                    }
+                                    launchSingleTop = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     )
@@ -89,15 +89,36 @@ fun NavGraph(
             }
 
             composable(Screen.Activity.route) {
-                ActivityScreen(viewModel = quizViewModel)
+                ActivityScreen(
+                    viewModel = quizViewModel,
+                    onNavigateHome = {
+                        navController.navigate(Screen.Landing.route) {
+                            popUpTo(Screen.Landing.route) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(Screen.UserStatistics.route) {
-                UserStatisticsScreen(viewModel = statsViewModel)
+                UserStatisticsScreen(
+                    viewModel = statsViewModel,
+                    onNavigateHome = {
+                        navController.navigate(Screen.Landing.route) {
+                            popUpTo(Screen.Landing.route) { inclusive = true }
+                        }
+                    }
+                )
             }
 
             composable(Screen.Settings.route) {
-                SettingsScreen(viewModel = settingsViewModel)
+                SettingsScreen(
+                    viewModel = settingsViewModel,
+                    onNavigateHome = {
+                        navController.navigate(Screen.Landing.route) {
+                            popUpTo(Screen.Landing.route) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }

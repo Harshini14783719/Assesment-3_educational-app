@@ -17,15 +17,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Percent
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,98 +52,116 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserStatisticsScreen(viewModel: StatsViewModel) {
+fun UserStatisticsScreen(
+    viewModel: StatsViewModel,
+    onNavigateHome: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
     ) {
-        Text(
-            text = "Learning Statistics",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground
+        TopAppBar(
+            title = { Text("Learning Statistics", fontWeight = FontWeight.Bold) },
+            navigationIcon = {
+                IconButton(onClick = onNavigateHome) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Return Home")
+                }
+            },
+            actions = {
+                IconButton(onClick = onNavigateHome) {
+                    Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Top Metrics Grid
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            MetricCard(
-                title = "Total Quizzes",
-                value = "${uiState.totalQuizzes}",
-                icon = Icons.Default.Assignment,
-                color = IndigoPrimary,
-                modifier = Modifier.weight(1f)
-            )
-
-            MetricCard(
-                title = "Avg Accuracy",
-                value = "${uiState.averagePercentage.toInt()}%",
-                icon = Icons.Default.Percent,
-                color = EmeraldSuccess,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
-                title = "High Score",
-                value = "${uiState.highScore}",
-                icon = Icons.Default.EmojiEvents,
-                color = Color(0xFFFF9800),
-                modifier = Modifier.weight(1f)
-            )
-
-            MetricCard(
-                title = "Best Category",
-                value = uiState.bestCategory,
-                icon = Icons.Default.Category,
-                color = PurpleAccent,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Recent Attempt History (Room Database)",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (uiState.results.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
+            // Top Metrics Grid
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "No quiz attempts recorded yet. Take your first STEM quiz!",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                MetricCard(
+                    title = "Total Quizzes",
+                    value = "${uiState.totalQuizzes}",
+                    icon = Icons.Default.Assignment,
+                    color = IndigoPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+
+                MetricCard(
+                    title = "Avg Accuracy",
+                    value = "${uiState.averagePercentage.toInt()}%",
+                    icon = Icons.Default.Percent,
+                    color = EmeraldSuccess,
+                    modifier = Modifier.weight(1f)
                 )
             }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(uiState.results) { result ->
-                    QuizResultRowItem(result = result)
+                MetricCard(
+                    title = "High Score",
+                    value = "${uiState.highScore}",
+                    icon = Icons.Default.EmojiEvents,
+                    color = Color(0xFFFF9800),
+                    modifier = Modifier.weight(1f)
+                )
+
+                MetricCard(
+                    title = "Best Category",
+                    value = uiState.bestCategory,
+                    icon = Icons.Default.Category,
+                    color = PurpleAccent,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Recent Attempt History (Room Database)",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (uiState.results.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No quiz attempts recorded yet. Take your first STEM quiz!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(uiState.results) { result ->
+                        QuizResultRowItem(result = result)
+                    }
                 }
             }
         }

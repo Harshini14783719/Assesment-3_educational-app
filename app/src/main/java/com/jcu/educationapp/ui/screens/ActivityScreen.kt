@@ -22,9 +22,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Timer
@@ -33,12 +35,17 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,10 +68,12 @@ import com.jcu.educationapp.ui.theme.RubyError
 import com.jcu.educationapp.viewmodel.QuizUiState
 import com.jcu.educationapp.viewmodel.QuizViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityScreen(
     viewModel: QuizViewModel,
-    initialCategory: String = "Science"
+    initialCategory: String = "Science",
+    onNavigateHome: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0 = Quiz, 1 = Flashcards
 
@@ -77,6 +86,23 @@ fun ActivityScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        TopAppBar(
+            title = { Text("Interactive Learning", fontWeight = FontWeight.Bold) },
+            navigationIcon = {
+                IconButton(onClick = onNavigateHome) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Return Home")
+                }
+            },
+            actions = {
+                IconButton(onClick = onNavigateHome) {
+                    Icon(imageVector = Icons.Default.Home, contentDescription = "Home")
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        )
+
         // Tab Header
         TabRow(
             selectedTabIndex = selectedTab,
@@ -91,12 +117,12 @@ fun ActivityScreen(
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text("Active Recall Flashcards", fontWeight = FontWeight.Bold) }
+                text = { Text("Flashcards", fontWeight = FontWeight.Bold) }
             )
         }
 
         if (selectedTab == 0) {
-            QuizTabContent(viewModel = viewModel)
+            QuizTabContent(viewModel = viewModel, onNavigateHome = onNavigateHome)
         } else {
             FlashcardTabContent()
         }
@@ -104,7 +130,7 @@ fun ActivityScreen(
 }
 
 @Composable
-private fun QuizTabContent(viewModel: QuizViewModel) {
+private fun QuizTabContent(viewModel: QuizViewModel, onNavigateHome: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(
@@ -154,7 +180,8 @@ private fun QuizTabContent(viewModel: QuizViewModel) {
             is QuizUiState.Completed -> {
                 CompletedQuizView(
                     state = state,
-                    onRestartClicked = { viewModel.loadQuiz(state.category) }
+                    onRestartClicked = { viewModel.loadQuiz(state.category) },
+                    onNavigateHome = onNavigateHome
                 )
             }
         }
@@ -363,7 +390,8 @@ private fun ActiveQuizView(
 @Composable
 private fun CompletedQuizView(
     state: QuizUiState.Completed,
-    onRestartClicked: () -> Unit
+    onRestartClicked: () -> Unit,
+    onNavigateHome: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -427,19 +455,33 @@ private fun CompletedQuizView(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Button(
                 onClick = onRestartClicked,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
+                    .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
             ) {
                 Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Take Another Quiz", fontSize = 16.sp)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onNavigateHome,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(imageVector = Icons.Default.Home, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Return to Home", fontSize = 16.sp)
             }
         }
     }
