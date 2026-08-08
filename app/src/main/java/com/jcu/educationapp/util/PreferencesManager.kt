@@ -15,6 +15,10 @@ class PreferencesManager(context: Context) {
         get() = prefs.getBoolean(KEY_VIBRATION, true)
         set(value) = prefs.edit().putBoolean(KEY_VIBRATION, value).apply()
 
+    var isDarkModeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_DARK_MODE, true)
+        set(value) = prefs.edit().putBoolean(KEY_DARK_MODE, value).apply()
+
     var difficultyLevel: String
         get() = prefs.getString(KEY_DIFFICULTY, "Medium") ?: "Medium"
         set(value) = prefs.edit().putString(KEY_DIFFICULTY, value).apply()
@@ -30,6 +34,7 @@ class PreferencesManager(context: Context) {
     companion object {
         private const val KEY_SOUND = "sound_enabled"
         private const val KEY_VIBRATION = "vibration_enabled"
+        private const val KEY_DARK_MODE = "dark_mode_enabled"
         private const val KEY_DIFFICULTY = "difficulty_level"
         private const val KEY_DAILY_TARGET = "daily_target"
         private const val KEY_STREAK = "streak_count"

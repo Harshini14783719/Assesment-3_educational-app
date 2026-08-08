@@ -15,9 +15,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.AlertDialog
@@ -84,6 +86,26 @@ fun SettingsScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Visual Theme Section
+            Text(
+                text = "App Theme & Appearance",
+                style = MaterialTheme.typography.titleLarge,
+                color = IndigoPrimary,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            SettingsToggleCard(
+                title = "Dark Mode Theme",
+                subtitle = if (uiState.isDarkMode) "Dark background with high contrast text" else "Light background with clean slate layout",
+                icon = if (uiState.isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                isChecked = uiState.isDarkMode,
+                onCheckedChange = { viewModel.toggleDarkMode(it) }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Sound & Audio Settings Section
             Text(
                 text = "Audio & Sensory Feedback",

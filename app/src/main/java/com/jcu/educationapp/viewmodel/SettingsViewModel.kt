@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 data class SettingsUiState(
     val soundEnabled: Boolean = true,
     val vibrationEnabled: Boolean = true,
+    val isDarkMode: Boolean = true,
     val difficultyLevel: String = "Medium",
     val dailyTarget: Int = 10,
     val isResetDialogOpen: Boolean = false
@@ -27,6 +28,7 @@ class SettingsViewModel(
         SettingsUiState(
             soundEnabled = preferencesManager.soundEnabled,
             vibrationEnabled = preferencesManager.vibrationEnabled,
+            isDarkMode = preferencesManager.isDarkModeEnabled,
             difficultyLevel = preferencesManager.difficultyLevel,
             dailyTarget = preferencesManager.dailyTargetQuestions
         )
@@ -41,6 +43,11 @@ class SettingsViewModel(
     fun toggleVibration(enabled: Boolean) {
         preferencesManager.vibrationEnabled = enabled
         _uiState.update { it.copy(vibrationEnabled = enabled) }
+    }
+
+    fun toggleDarkMode(enabled: Boolean) {
+        preferencesManager.isDarkModeEnabled = enabled
+        _uiState.update { it.copy(isDarkMode = enabled) }
     }
 
     fun setDifficulty(difficulty: String) {

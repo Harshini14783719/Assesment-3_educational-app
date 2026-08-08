@@ -3,6 +3,8 @@ package com.jcu.educationapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelProvider
 import com.jcu.educationapp.ui.navigation.NavGraph
 import com.jcu.educationapp.ui.theme.BrainSparkTheme
@@ -30,7 +32,9 @@ class MainActivity : ComponentActivity() {
         val settingsViewModel = ViewModelProvider(this, factory)[SettingsViewModel::class.java]
 
         setContent {
-            BrainSparkTheme {
+            val settingsUiState by settingsViewModel.uiState.collectAsState()
+
+            BrainSparkTheme(darkTheme = settingsUiState.isDarkMode) {
                 NavGraph(
                     landingViewModel = landingViewModel,
                     quizViewModel = quizViewModel,
