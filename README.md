@@ -49,7 +49,7 @@ Test results and reports will be generated in `app/build/reports/tests/testDebug
 
 ---
 
-## 🛡️ Ethical & Professional Design Principles
+## Ethical & Professional Design Principles
 
 Drawing upon research from Assessment 2 and the **ACS (Australian Computer Society) Code of Ethics**:
 
@@ -60,7 +60,7 @@ Drawing upon research from Assessment 2 and the **ACS (Australian Computer Socie
 
 ---
 
-## 📝 Deliverables Included in Repository
+## Deliverables Included in Repository
 - `app/`: Complete source code and test files exported from Android Studio.
 - `GIBBS_SELF_REFLECTION.md`: 1000-word Self-Reflection essay based on Gibbs' Reflective Cycle.
 - `README.md`: System documentation & architectural blueprint.
