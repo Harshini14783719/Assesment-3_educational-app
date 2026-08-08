@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
@@ -75,7 +76,7 @@ fun ActivityScreen(
     initialCategory: String = "Science",
     onNavigateHome: () -> Unit = {}
 ) {
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Quiz, 1 = Flashcards
+    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Flashcards First, 1 = Quiz Mode
 
     LaunchedEffect(initialCategory) {
         viewModel.loadQuiz(category = initialCategory)
@@ -103,7 +104,7 @@ fun ActivityScreen(
             )
         )
 
-        // Tab Header
+        // Tab Header: Flashcards First, then Quiz
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = MaterialTheme.colorScheme.surface,
@@ -112,19 +113,179 @@ fun ActivityScreen(
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text("STEM Quiz Mode", fontWeight = FontWeight.Bold) }
+                text = { Text("1. Active Flashcards", fontWeight = FontWeight.Bold) }
             )
             Tab(
                 selected = selectedTab == 1,
                 onClick = { selectedTab = 1 },
-                text = { Text("Flashcards", fontWeight = FontWeight.Bold) }
+                text = { Text("2. Take STEM Quiz", fontWeight = FontWeight.Bold) }
             )
         }
 
         if (selectedTab == 0) {
-            QuizTabContent(viewModel = viewModel, onNavigateHome = onNavigateHome)
+            FlashcardTabContent(
+                category = initialCategory,
+                onStartQuiz = { selectedTab = 1 }
+            )
         } else {
-            FlashcardTabContent()
+            QuizTabContent(viewModel = viewModel, onNavigateHome = onNavigateHome)
+        }
+    }
+}
+
+@Composable
+private fun FlashcardTabContent(
+    category: String,
+    onStartQuiz: () -> Unit
+) {
+    var cardFlipped by remember { mutableStateOf(false) }
+    var currentCardIndex by remember { mutableIntStateOf(0) }
+
+    val flashcards = remember(category) {
+        if (category == "Computers") {
+            listOf(
+                "Algorithm" to "A self-contained step-by-step set of operations to solve a problem or perform a computation.",
+                "API (Application Programming Interface)" to "A set of protocols, routines, and tools for building software applications and connecting services.",
+                "Encapsulation" to "In Object-Oriented Programming, bundling data with the methods operating on that data and restricting direct access.",
+                "Binary System" to "A base-2 number system representing numeric values using two symbols: 0 and 1.",
+                "Jetpack Compose" to "Android's modern declarative UI toolkit for building native user interfaces efficiently in Kotlin."
+            )
+        } else {
+            listOf(
+                "Photosynthesis" to "The biological process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water.",
+                "Mitochondria" to "The power-producing organelle inside eukaryotic cells that converts glucose into cellular ATP energy.",
+                "DNA (Deoxyribonucleic Acid)" to "The molecule carrying genetic instructions for the development, functioning, and reproduction of living organisms.",
+                "Newton's First Law" to "An object will remain at rest or in uniform motion in a straight line unless acted upon by an external force.",
+                "Atomic Number" to "The number of protons found in the nucleus of an atom, uniquely identifying a chemical element."
+            )
+        }
+    }
+
+    val currentPair = flashcards[currentCardIndex]
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(IndigoPrimary.copy(alpha = 0.1f))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = "Study First: $category Flashcards",
+                color = IndigoPrimary,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Card ${currentCardIndex + 1} of ${flashcards.size}",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Flip Flashcard Container
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(240.dp)
+                .clickable { cardFlipped = !cardFlipped },
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (cardFlipped) IndigoPrimary else MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = if (cardFlipped) "DEFINITION" else "TERM (Tap to flip)",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (cardFlipped) Color.White.copy(alpha = 0.8f) else IndigoPrimary
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (cardFlipped) currentPair.second else currentPair.first,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = if (cardFlipped) Color.White else MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "💡 Tap card to flip between Term and Definition",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Card navigation row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(
+                onClick = {
+                    if (currentCardIndex > 0) {
+                        currentCardIndex--
+                        cardFlipped = false
+                    }
+                },
+                enabled = currentCardIndex > 0
+            ) {
+                Text("Previous")
+            }
+
+            Button(
+                onClick = {
+                    if (currentCardIndex + 1 < flashcards.size) {
+                        currentCardIndex++
+                        cardFlipped = false
+                    }
+                },
+                enabled = currentCardIndex + 1 < flashcards.size
+            ) {
+                Text("Next")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // Ready to Quiz CTA button
+        Button(
+            onClick = onStartQuiz,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = IndigoPrimary)
+        ) {
+            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Reviewed Cards? Start Quiz Now →",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
@@ -482,103 +643,6 @@ private fun CompletedQuizView(
                 Icon(imageVector = Icons.Default.Home, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Return to Home", fontSize = 16.sp)
-            }
-        }
-    }
-}
-
-@Composable
-private fun FlashcardTabContent() {
-    var cardFlipped by remember { mutableStateOf(false) }
-    var currentCardIndex by remember { mutableIntStateOf(0) }
-
-    val flashcards = remember {
-        listOf(
-            "Photosynthesis" to "The biological process by which green plants use sunlight to synthesize nutrients from carbon dioxide and water.",
-            "Algorithm" to "A self-contained step-by-step set of operations to solve a problem or perform a computation.",
-            "DNA (Deoxyribonucleic Acid)" to "The molecule carrying genetic instructions for the development, functioning, and reproduction of living organisms.",
-            "Newton's First Law" to "An object will remain at rest or in uniform motion in a straight line unless acted upon by an external force.",
-            "Encapsulation" to "In OOP, bundling data with the methods operating on that data, restricting direct access to object components."
-        )
-    }
-
-    val currentPair = flashcards[currentCardIndex]
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Card ${currentCardIndex + 1} of ${flashcards.size}",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp)
-                .clickable { cardFlipped = !cardFlipped },
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (cardFlipped) IndigoPrimary else MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = if (cardFlipped) currentPair.second else currentPair.first,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = if (cardFlipped) Color.White else MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Tap card to flip between Term and Definition",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Button(
-                onClick = {
-                    if (currentCardIndex > 0) {
-                        currentCardIndex--
-                        cardFlipped = false
-                    }
-                },
-                enabled = currentCardIndex > 0
-            ) {
-                Text("Previous")
-            }
-
-            Button(
-                onClick = {
-                    if (currentCardIndex + 1 < flashcards.size) {
-                        currentCardIndex++
-                        cardFlipped = false
-                    }
-                },
-                enabled = currentCardIndex + 1 < flashcards.size
-            ) {
-                Text("Next")
             }
         }
     }
