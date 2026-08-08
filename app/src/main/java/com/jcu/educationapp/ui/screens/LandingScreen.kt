@@ -190,7 +190,7 @@ fun LandingScreen(
 
                 Column {
                     Text(
-                        text = "Quote of the Day (Live API)",
+                        text = "Quote of the Day",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
