@@ -36,7 +36,7 @@ com.jcu.educationapp/
 ```
 
 - **UI Framework**: Jetpack Compose with Material Design 3 (`androidx.compose.material3`).
-- **Networking**: Retrofit 2 + Gson for live parsing of Open Science / Trivia REST API data.
+- **Networking**: Retrofit 2 + Gson for retrieving live quiz questions from Open Trivia DB and daily facts from the UselessFacts API.
 - **Database**: Room Database with SQLite for storing quiz history, performance metrics, and pre-populated offline questions.
 - **Async Operations**: Kotlin Coroutines + `StateFlow` reactive streams.
 - **Navigation**: Type-safe `androidx.navigation.compose` navigation controller with bottom navigation bar.
@@ -53,14 +53,14 @@ Test results and reports will be generated in `app/build/reports/tests/testDebug
 
 Drawing upon research from Assessment 2 and the **ACS (Australian Computer Society) Code of Ethics**:
 
-1. **Privacy by Design & Data Autonomy**: No unnecessary personally identifiable information (PII) is collected or transmitted. All learning statistics remain locally stored on the device using Room DB.
-2. **Safe & Age-Appropriate Content**: Curated science and tech content suitable for learners without exposure to dark patterns, intrusive ads, or predatory microtransactions.
+1. **Privacy by Design & Data Autonomy**:The app does not require accounts or collect names, emails, passwords, or other personally identifiable information. Quiz statistics are stored locally using Room, and no user behaviour telemetry is collected.
+2. **Safe & Age-Appropriate Content**: The app is designed for educational STEM revision and avoids intrusive advertising, predatory monetisation, and pressure-based engagement patterns.
 3. **User Autonomy**: Users can reset or purge their historical database data at any time via the Settings screen.
 4. **Accessibility**: High-contrast Material 3 colors, clear font hierarchies, and optional haptic/audio feedback.
+5. **User Wellbeing**: Notifications were deliberately not implemented because frequent reminders could distract or pressure students and encourage unnecessary engagement.
 
 ---
 
 ## Deliverables Included in Repository
 - `app/`: Complete source code and test files exported from Android Studio.
-- `GIBBS_SELF_REFLECTION.md`: 1000-word Self-Reflection essay based on Gibbs' Reflective Cycle.
 - `README.md`: System documentation & architectural blueprint.
