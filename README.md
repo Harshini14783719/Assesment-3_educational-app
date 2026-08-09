@@ -11,7 +11,7 @@
 | :--- | :--- |
 | **Landing Page** | Entry point featuring daily STEM facts, streak tracker, average score gauge, quick quiz launch shortcuts, and modern Material 3 gradient cards. |
 | **Activity Screen** | Multi-mode learning hub containing: <br>• **STEM Quiz Mode**: Animated countdown timer, live score calculation, API integration, instant feedback, and answer explanations.<br>• **Active Recall Flashcards**: Interactive flip-cards for scientific definition memorization. |
-| **Settings Screen** | Allows users to toggle sound effects, haptic vibration, select question difficulty (Easy/Medium/Hard), set daily targets, and manage database records. |
+| **Settings Screen** | Allows users to toggle sound effects, haptic vibration, select question difficulty (Easy/Medium/Hard), manage sound, haptic feedback, difficulty, theme preferences, and database records. |
 | **User Statistics Screen** | Comprehensive learning analytics dashboard displaying historical attempt records stored in Room DB, accuracy percentages, high scores, and category breakdowns. |
 
 ---
